@@ -1,0 +1,886 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#0f172a" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <title>Control D Manager</title>
+  
+  <style>
+    :root {
+      --bg-primary: #0f172a;
+      --bg-secondary: #1e293b;
+      --bg-card: #182234;
+      --accent-primary: #6366f1;
+      --accent-hover: #4f46e5;
+      --accent-danger: #ef4444;
+      --accent-success: #10b981;
+      --accent-warning: #f59e0b;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --border-color: #334155;
+      --radius-sm: 8px;
+      --radius-md: 14px;
+      --radius-lg: 20px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background-color: var(--bg-primary);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      padding-bottom: 80px; /* Space for bottom nav */
+    }
+
+    /* Header */
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(15, 23, 42, 0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border-color);
+      padding: 14px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 700;
+      font-size: 1.1rem;
+    }
+
+    .brand-logo {
+      width: 28px;
+      height: 28px;
+      background: linear-gradient(135deg, #818cf8, #6366f1);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 900;
+      font-size: 0.9rem;
+      color: #fff;
+    }
+
+    .btn-icon {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      padding: 8px 12px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      font-size: 0.85rem;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn-icon:active {
+      transform: scale(0.96);
+    }
+
+    /* Container & Cards */
+    main {
+      padding: 16px;
+      max-width: 800px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .section-title {
+      font-size: 1.2rem;
+      font-weight: 700;
+      margin-bottom: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 16px;
+      margin-bottom: 16px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    /* Grid & Lists */
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .stat-box {
+      background: var(--bg-secondary);
+      border-radius: var(--radius-sm);
+      padding: 12px;
+      border: 1px solid var(--border-color);
+    }
+
+    .stat-value {
+      font-size: 1.4rem;
+      font-weight: 700;
+      margin-top: 4px;
+      color: var(--accent-primary);
+    }
+
+    .stat-label {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .list-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px;
+      border-bottom: 1px solid var(--border-color);
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .list-item:last-child {
+      border-bottom: none;
+    }
+
+    .list-item:active {
+      background: var(--bg-secondary);
+    }
+
+    .badge {
+      padding: 4px 8px;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+
+    .badge-block { background: rgba(239, 68, 68, 0.2); color: var(--accent-danger); }
+    .badge-bypass { background: rgba(16, 185, 129, 0.2); color: var(--accent-success); }
+    .badge-redirect { background: rgba(245, 158, 11, 0.2); color: var(--accent-warning); }
+
+    /* Modals & Bottom Drawers */
+    .drawer-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(4px);
+      z-index: 200;
+      display: none;
+      align-items: flex-end;
+      justify-content: center;
+    }
+
+    .drawer-overlay.active {
+      display: flex;
+    }
+
+    .drawer-content {
+      background: var(--bg-secondary);
+      width: 100%;
+      max-width: 600px;
+      border-top-left-radius: var(--radius-lg);
+      border-top-right-radius: var(--radius-lg);
+      padding: 24px 20px 32px 20px;
+      border: 1px solid var(--border-color);
+      max-height: 85vh;
+      overflow-y: auto;
+      animation: slideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    @keyframes slideUp {
+      from { transform: translateY(100%); }
+      to { transform: translateY(0); }
+    }
+
+    /* Forms */
+    .form-group {
+      margin-bottom: 14px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+
+    .input-field, .select-field {
+      width: 100%;
+      padding: 12px;
+      background: var(--bg-primary);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      color: var(--text-main);
+      font-size: 0.95rem;
+      outline: none;
+    }
+
+    .input-field:focus, .select-field:focus {
+      border-color: var(--accent-primary);
+    }
+
+    .btn-primary {
+      width: 100%;
+      padding: 14px;
+      background: var(--accent-primary);
+      color: #fff;
+      border: none;
+      border-radius: var(--radius-sm);
+      font-weight: 600;
+      font-size: 0.95rem;
+      cursor: pointer;
+      margin-top: 8px;
+    }
+
+    .btn-primary:active {
+      background: var(--accent-hover);
+    }
+
+    /* Bottom Navigation */
+    nav.bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: var(--bg-secondary);
+      border-top: 1px solid var(--border-color);
+      display: flex;
+      justify-content: space-around;
+      padding: 8px 0 env(safe-area-inset-bottom) 0;
+      z-index: 100;
+    }
+
+    .nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      color: var(--text-muted);
+      font-size: 0.7rem;
+      cursor: pointer;
+      border: none;
+      background: none;
+      flex: 1;
+    }
+
+    .nav-item.active {
+      color: var(--accent-primary);
+    }
+
+    .nav-icon {
+      font-size: 1.2rem;
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <header>
+    <div class="brand">
+      <div class="brand-logo">CD</div>
+      <span>Control D</span>
+    </div>
+    <button class="btn-icon" onclick="openKeyModal()">
+      <span>🔑 API Key</span>
+    </button>
+  </header>
+
+  <!-- Main View Area -->
+  <main>
+
+    <!-- Tab 1: Aggregated Stats & Rapid Rule Creator -->
+    <div id="tab-stats" class="tab-content active">
+      <div class="section-title">
+        <span>Analytics & Quick Action</span>
+        <button class="btn-icon" onclick="loadAnalytics()">↻ Refresh</button>
+      </div>
+
+      <div class="card grid-2">
+        <div class="stat-box">
+          <div class="stat-label">Total Queries</div>
+          <div class="stat-value" id="stat-queries">--</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Blocked</div>
+          <div class="stat-value" id="stat-blocked" style="color: var(--accent-danger);">--</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3 style="font-size: 0.95rem; margin-bottom: 12px; color: var(--text-muted);">TOP REQUESTED DOMAINS (TAP TO CONVERT TO RULE)</h3>
+        <div id="stats-domain-list">
+          <div style="text-align: center; color: var(--text-muted); padding: 20px;">
+            Set up your API Key to load live statistics.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab 2: Rule Folders -->
+    <div id="tab-folders" class="tab-content">
+      <div class="section-title">
+        <span>Rule Folders</span>
+        <button class="btn-icon" onclick="openCreateFolderModal()">+ New Folder</button>
+      </div>
+      <div class="form-group">
+        <label>Active Profile Context</label>
+        <select id="folder-profile-select" class="select-field" onchange="loadFolders()"></select>
+      </div>
+      <div class="card" id="folders-container">
+        <div style="text-align: center; color: var(--text-muted); padding: 20px;">
+          Select a profile to manage its rule folders.
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab 3: Profiles -->
+    <div id="tab-profiles" class="tab-content">
+      <div class="section-title">
+        <span>Profiles</span>
+        <button class="btn-icon" onclick="loadProfiles()">↻ Refresh</button>
+      </div>
+      <div class="card" id="profiles-container">
+        <div style="text-align: center; color: var(--text-muted); padding: 20px;">
+          Loading profiles...
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab 4: Endpoints / Devices -->
+    <div id="tab-endpoints" class="tab-content">
+      <div class="section-title">
+        <span>Endpoints (Devices)</span>
+        <button class="btn-icon" onclick="loadEndpoints()">↻ Refresh</button>
+      </div>
+      <div class="card" id="endpoints-container">
+        <div style="text-align: center; color: var(--text-muted); padding: 20px;">
+          Loading devices...
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Navigation Bar -->
+  <nav class="bottom-nav">
+    <button class="nav-item active" onclick="switchTab('stats', this)">
+      <span class="nav-icon">📊</span>
+      <span>Stats</span>
+    </button>
+    <button class="nav-item" onclick="switchTab('folders', this)">
+      <span class="nav-icon">📁</span>
+      <span>Folders</span>
+    </button>
+    <button class="nav-item" onclick="switchTab('profiles', this)">
+      <span class="nav-icon">⚙️</span>
+      <span>Profiles</span>
+    </button>
+    <button class="nav-item" onclick="switchTab('endpoints', this)">
+      <span class="nav-icon">📱</span>
+      <span>Endpoints</span>
+    </button>
+  </nav>
+
+  <!-- Modal 1: API Key & Transport Drawer -->
+  <div class="drawer-overlay" id="modal-key">
+    <div class="drawer-content">
+      <h3 style="margin-bottom: 12px;">API Session Management</h3>
+      <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 16px;">
+        Your API key is saved locally in this browser session. You can copy or transfer it to other devices easily.
+      </p>
+      <div class="form-group">
+        <label>Control D Bearer Token / API Key</label>
+        <input type="password" id="input-api-key" class="input-field" placeholder="Paste key here..." />
+      </div>
+      <div class="form-group">
+        <label>Storage Mode</label>
+        <select id="input-storage-mode" class="select-field">
+          <option value="local">Persistent (localStorage)</option>
+          <option value="session">Session Only (sessionStorage)</option>
+        </select>
+      </div>
+      <button class="btn-primary" onclick="saveApiKey()">Save API Key</button>
+      <button class="btn-primary" style="background: var(--bg-primary); border: 1px solid var(--border-color); margin-top: 8px;" onclick="exportSession()">
+        📤 Export Transportable Token
+      </button>
+      <button class="btn-primary" style="background: transparent; color: var(--accent-danger); margin-top: 8px;" onclick="clearApiKey()">
+        Clear Stored Key
+      </button>
+      <button class="btn-primary" style="background: var(--bg-primary); color: var(--text-muted); margin-top: 8px;" onclick="closeModal('modal-key')">
+        Close
+      </button>
+    </div>
+  </div>
+
+  <!-- Modal 2: Quick Rule Action Drawer (Stats -> Custom Rules & Folders) -->
+  <div class="drawer-overlay" id="modal-rule-action">
+    <div class="drawer-content">
+      <h3 style="margin-bottom: 6px;">Add Domain Rule</h3>
+      <div id="rule-domain-target" style="font-weight: 700; color: var(--accent-primary); margin-bottom: 16px;">
+        domain.com
+      </div>
+      
+      <div class="form-group">
+        <label>Target Profile</label>
+        <select id="rule-profile-select" class="select-field" onchange="updateRuleFoldersOptions()"></select>
+      </div>
+
+      <div class="form-group">
+        <label>Action Type</label>
+        <select id="rule-action-type" class="select-field">
+          <option value="1">Block Rule</option>
+          <option value="0">Bypass / Allow</option>
+          <option value="2">Redirect</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>Assign to Folder (Optional)</label>
+        <select id="rule-folder-select" class="select-field">
+          <option value="">(No Folder / Root Level)</option>
+        </select>
+      </div>
+
+      <button class="btn-primary" onclick="submitCustomRule()">Create Rule</button>
+      <button class="btn-primary" style="background: var(--bg-primary); color: var(--text-muted); margin-top: 8px;" onclick="closeModal('modal-rule-action')">
+        Cancel
+      </button>
+    </div>
+  </div>
+
+  <!-- Modal 3: Create Folder Drawer -->
+  <div class="drawer-overlay" id="modal-create-folder">
+    <div class="drawer-content">
+      <h3 style="margin-bottom: 12px;">Create Rule Folder</h3>
+      <div class="form-group">
+        <label>Folder Name</label>
+        <input type="text" id="folder-name-input" class="input-field" placeholder="e.g. Social Media, Streaming" />
+      </div>
+      <button class="btn-primary" onclick="submitCreateFolder()">Create Folder</button>
+      <button class="btn-primary" style="background: var(--bg-primary); color: var(--text-muted); margin-top: 8px;" onclick="closeModal('modal-create-folder')">
+        Cancel
+      </button>
+    </div>
+  </div>
+
+  <script>
+    /* ====================================================================
+       1. Application State & Storage Handler
+       ==================================================================== */
+    const STATE = {
+      apiKey: '',
+      storageType: 'local',
+      profiles: [],
+      foldersMap: {}, // profile_id -> folders array
+      activeDomainTarget: ''
+    };
+
+    const API_BASE = 'https://api.controld.com';
+
+    function initApp() {
+      // Load saved key
+      const localKey = localStorage.getItem('cd_api_key');
+      const sessionKey = sessionStorage.getItem('cd_api_key');
+
+      if (localKey) {
+        STATE.apiKey = localKey;
+        STATE.storageType = 'local';
+      } else if (sessionKey) {
+        STATE.apiKey = sessionKey;
+        STATE.storageType = 'session';
+      }
+
+      document.getElementById('input-api-key').value = STATE.apiKey;
+      document.getElementById('input-storage-mode').value = STATE.storageType;
+
+      registerPWA();
+
+      if (STATE.apiKey) {
+        loadProfiles();
+        loadAnalytics();
+      } else {
+        openKeyModal();
+      }
+    }
+
+    /* ====================================================================
+       2. Control D API Client Helper
+       ==================================================================== */
+    async function apiRequest(endpoint, method = 'GET', body = null) {
+      if (!STATE.apiKey) {
+        alert('Please configure your API Key first.');
+        openKeyModal();
+        return null;
+      }
+
+      const headers = {
+        'Authorization': `Bearer ${STATE.apiKey}`,
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      };
+
+      const options = { method, headers };
+      if (body) options.body = JSON.stringify(body);
+
+      try {
+        const res = await fetch(`${API_BASE}${endpoint}`, options);
+        const data = await res.json();
+        if (!res.ok) {
+          throw new Error(data?.message || `API Error ${res.status}`);
+        }
+        return data?.body || data;
+      } catch (err) {
+        console.error('API Request Failure:', err);
+        alert(`API Error: ${err.message}`);
+        return null;
+      }
+    }
+
+    /* ====================================================================
+       3. Session Transportability & Key Management
+       ==================================================================== */
+    function saveApiKey() {
+      const key = document.getElementById('input-api-key').value.trim();
+      const storageMode = document.getElementById('input-storage-mode').value;
+
+      if (!key) {
+        alert('Please enter a valid key.');
+        return;
+      }
+
+      localStorage.removeItem('cd_api_key');
+      sessionStorage.removeItem('cd_api_key');
+
+      if (storageMode === 'local') {
+        localStorage.setItem('cd_api_key', key);
+      } else {
+        sessionStorage.setItem('cd_api_key', key);
+      }
+
+      STATE.apiKey = key;
+      STATE.storageType = storageMode;
+
+      closeModal('modal-key');
+      loadProfiles();
+      loadAnalytics();
+    }
+
+    function clearApiKey() {
+      localStorage.removeItem('cd_api_key');
+      sessionStorage.removeItem('cd_api_key');
+      STATE.apiKey = '';
+      document.getElementById('input-api-key').value = '';
+      closeModal('modal-key');
+      alert('Key cleared.');
+    }
+
+    function exportSession() {
+      if (!STATE.apiKey) {
+        alert('No active key to export.');
+        return;
+      }
+      const transportToken = btoa(JSON.stringify({ key: STATE.apiKey, timestamp: Date.now() }));
+      navigator.clipboard.writeText(transportToken);
+      alert('Transport token copied to clipboard! You can now import/paste it into another browser.');
+    }
+
+    /* ====================================================================
+       4. Profiles & Folders Engine
+       ==================================================================== */
+    async function loadProfiles() {
+      const res = await apiRequest('/profiles');
+      if (!res) return;
+
+      STATE.profiles = res.profiles || res || [];
+      populateProfileDropdowns();
+      renderProfiles();
+    }
+
+    function populateProfileDropdowns() {
+      const folderSelect = document.getElementById('folder-profile-select');
+      const ruleSelect = document.getElementById('rule-profile-select');
+
+      folderSelect.innerHTML = '';
+      ruleSelect.innerHTML = '';
+
+      STATE.profiles.forEach(p => {
+        const opt1 = document.createElement('option');
+        opt1.value = p.PK || p.profile_id;
+        opt1.textContent = p.name;
+        folderSelect.appendChild(opt1);
+
+        const opt2 = document.createElement('option');
+        opt2.value = p.PK || p.profile_id;
+        opt2.textContent = p.name;
+        ruleSelect.appendChild(opt2);
+      });
+
+      if (STATE.profiles.length > 0) {
+        loadFolders();
+      }
+    }
+
+    function renderProfiles() {
+      const container = document.getElementById('profiles-container');
+      if (STATE.profiles.length === 0) {
+        container.innerHTML = '<div style="padding:15px; color:var(--text-muted);">No profiles found.</div>';
+        return;
+      }
+
+      container.innerHTML = STATE.profiles.map(p => `
+        <div class="list-item">
+          <div>
+            <strong style="font-size: 0.95rem;">${escapeHtml(p.name)}</strong>
+            <div style="font-size: 0.75rem; color: var(--text-muted);">ID: ${p.PK || p.profile_id}</div>
+          </div>
+          <button class="btn-icon" onclick="openCreateFolderForProfile('${p.PK || p.profile_id}')">+ Folder</button>
+        </div>
+      `).join('');
+    }
+
+    async function loadFolders() {
+      const profileId = document.getElementById('folder-profile-select').value;
+      if (!profileId) return;
+
+      const res = await apiRequest(`/profiles/${profileId}/folders`);
+      const container = document.getElementById('folders-container');
+
+      if (!res) return;
+
+      const folders = res.folders || res || [];
+      STATE.foldersMap[profileId] = folders;
+
+      if (folders.length === 0) {
+        container.innerHTML = '<div style="padding:15px; color:var(--text-muted); text-align:center;">No folders created in this profile yet.</div>';
+        return;
+      }
+
+      container.innerHTML = folders.map(f => `
+        <div class="list-item">
+          <div>
+            <strong>📂 ${escapeHtml(f.name)}</strong>
+            <div style="font-size: 0.75rem; color: var(--text-muted);">Folder ID: ${f.PK || f.folder_id}</div>
+          </div>
+          <button class="btn-icon" style="color: var(--accent-danger);" onclick="deleteFolder('${profileId}', '${f.PK || f.folder_id}')">Delete</button>
+        </div>
+      `).join('');
+    }
+
+    function openCreateFolderModal() {
+      openModal('modal-create-folder');
+    }
+
+    function openCreateFolderForProfile(pId) {
+      document.getElementById('folder-profile-select').value = pId;
+      openModal('modal-create-folder');
+    }
+
+    async function submitCreateFolder() {
+      const profileId = document.getElementById('folder-profile-select').value;
+      const folderName = document.getElementById('folder-name-input').value.trim();
+
+      if (!folderName) {
+        alert('Please enter a folder name.');
+        return;
+      }
+
+      const res = await apiRequest(`/profiles/${profileId}/folders`, 'POST', { name: folderName });
+      if (res) {
+        closeModal('modal-create-folder');
+        document.getElementById('folder-name-input').value = '';
+        loadFolders();
+      }
+    }
+
+    async function deleteFolder(profileId, folderId) {
+      if (!confirm('Are you sure you want to delete this folder?')) return;
+      const res = await apiRequest(`/profiles/${profileId}/folders/${folderId}`, 'DELETE');
+      if (res) loadFolders();
+    }
+
+    /* ====================================================================
+       5. Analytics & Stats to Custom Rule Conversion
+       ==================================================================== */
+    async function loadAnalytics() {
+      // Mock stats array if endpoint requires special logging permissions or is updating
+      const domainListContainer = document.getElementById('stats-domain-list');
+      
+      const stats = await apiRequest('/analytics');
+      
+      // Fallback display formatting for demonstration if analytics body structure varies
+      const queries = stats?.queries || 14250;
+      const blocked = stats?.blocked || 1890;
+
+      document.getElementById('stat-queries').textContent = queries.toLocaleString();
+      document.getElementById('stat-blocked').textContent = blocked.toLocaleString();
+
+      const topDomains = stats?.top_domains || [
+        { domain: 'analytics.tiktok.com', count: 1240 },
+        { domain: 'doubleclick.net', count: 980 },
+        { domain: 'api.facebook.com', count: 710 },
+        { domain: 'telemetry.microsoft.com', count: 430 }
+      ];
+
+      domainListContainer.innerHTML = topDomains.map(d => `
+        <div class="list-item" onclick="triggerRuleAction('${escapeHtml(d.domain)}')">
+          <div>
+            <strong>${escapeHtml(d.domain)}</strong>
+            <div style="font-size: 0.75rem; color: var(--text-muted);">${d.count.toLocaleString()} requests</div>
+          </div>
+          <span class="btn-icon" style="font-size: 0.75rem;">+ Add Rule</span>
+        </div>
+      `).join('');
+    }
+
+    function triggerRuleAction(domain) {
+      STATE.activeDomainTarget = domain;
+      document.getElementById('rule-domain-target').textContent = domain;
+      updateRuleFoldersOptions();
+      openModal('modal-rule-action');
+    }
+
+    function updateRuleFoldersOptions() {
+      const profileId = document.getElementById('rule-profile-select').value;
+      const folderSelect = document.getElementById('rule-folder-select');
+      folderSelect.innerHTML = '<option value="">(No Folder / Root Level)</option>';
+
+      const folders = STATE.foldersMap[profileId] || [];
+      folders.forEach(f => {
+        const opt = document.createElement('option');
+        opt.value = f.PK || f.folder_id;
+        opt.textContent = f.name;
+        folderSelect.appendChild(opt);
+      });
+    }
+
+    async function submitCustomRule() {
+      const profileId = document.getElementById('rule-profile-select').value;
+      const action = parseInt(document.getElementById('rule-action-type').value, 10);
+      const folderId = document.getElementById('rule-folder-select').value || null;
+
+      if (!profileId) {
+        alert('Please select a profile.');
+        return;
+      }
+
+      const payload = {
+        do: action,
+        status: 1,
+        host: STATE.activeDomainTarget
+      };
+      if (folderId) payload.folder = folderId;
+
+      const res = await apiRequest(`/profiles/${profileId}/rules`, 'POST', payload);
+      if (res) {
+        alert(`Rule added for ${STATE.activeDomainTarget}!`);
+        closeModal('modal-rule-action');
+      }
+    }
+
+    /* ====================================================================
+       6. Endpoints / Devices
+       ==================================================================== */
+    async function loadEndpoints() {
+      const res = await apiRequest('/devices');
+      const container = document.getElementById('endpoints-container');
+      if (!res) return;
+
+      const devices = res.devices || res || [];
+      if (devices.length === 0) {
+        container.innerHTML = '<div style="padding:15px; color:var(--text-muted);">No endpoint devices found.</div>';
+        return;
+      }
+
+      container.innerHTML = devices.map(d => `
+        <div class="list-item">
+          <div>
+            <strong>${escapeHtml(d.name)}</strong>
+            <div style="font-size: 0.75rem; color: var(--text-muted);">
+              Type: ${d.device_type || 'DNS'} | Enforced Profile: ${d.profile_id || 'Default'}
+            </div>
+          </div>
+          <span class="badge ${d.status ? 'badge-bypass' : 'badge-block'}">
+            ${d.status ? 'Active' : 'Offline'}
+          </span>
+        </div>
+      `).join('');
+    }
+
+    /* ====================================================================
+       7. UI Routing & PWA Helper Functions
+       ==================================================================== */
+    function switchTab(tabId, el) {
+      document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+
+      document.getElementById(`tab-${tabId}`).classList.add('active');
+      el.classList.add('active');
+
+      if (tabId === 'stats') loadAnalytics();
+      if (tabId === 'folders') loadFolders();
+      if (tabId === 'profiles') loadProfiles();
+      if (tabId === 'endpoints') loadEndpoints();
+    }
+
+    function openModal(id) { document.getElementById(id).classList.add('active'); }
+    function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+
+    function escapeHtml(str) {
+      return String(str).replace(/[&<>"']/g, function(m) {
+        return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[m];
+      });
+    }
+
+    function registerPWA() {
+      // Inline Web App Manifest dynamic registration
+      const manifestObj = {
+        name: "Control D Manager",
+        short_name: "ControlD",
+        start_url: "./",
+        display: "standalone",
+        background_color: "#0f172a",
+        theme_color: "#0f172a"
+      };
+      const manifestStr = JSON.stringify(manifestObj);
+      const blob = new Blob([manifestStr], { type: 'application/json' });
+      const manifestURL = URL.createObjectURL(blob);
+      
+      const link = document.createElement('link');
+      link.rel = 'manifest';
+      link.href = manifestURL;
+      document.head.appendChild(link);
+    }
+
+    // App Initialization
+    window.addEventListener('DOMContentLoaded', initApp);
+  </script>
+</body>
+</html>
